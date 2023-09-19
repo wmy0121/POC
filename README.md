@@ -27,6 +27,7 @@ Follow these steps to run the project:
 ## Project Structure
 1. Frontend Page Directory: src/main/resources
 2. Backend API Code Directory: src/main/java
-
-
+## Usage
+The front-end application communicates with the back-end API to create, read, update, and delete users.
+ 
 
