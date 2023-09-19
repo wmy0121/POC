@@ -16,7 +16,17 @@ The backend application leverages Spring Boot, Spring Data JPA, and MySQL databa
 ## Frontend-Backend Integration
 To facilitate seamless communication between the frontend and backend, we use the following code configuration (located in the Spring MVC module of the Java Spring framework):
 ![Image text](https://github.com/wmy0121/POC/blob/master/img/%E5%9B%BE%E5%83%8F9-19-23%20%E4%B8%8B%E5%8D%885.52.jpeg)
-
+This code configures a static resource handler to manage static resources in the web application. Frontend files are located in the src/main/resources/static directory. Consequently, you can access frontend pages via http://localhost:8080/login.html.
+## Steps to Operate
+Follow these steps to run the project:
+1. Clone the project to your local machine.
+2. Import the project using IntelliJ IDEA or a similar development tool.
+3. Run the userManagementApplication class.
+4. Open your web browser and navigate to http://localhost:8080/login.html.
+5. Log in or register as needed.
+## Project Structure
+1. Frontend Page Directory: src/main/resources
+2. Backend API Code Directory: src/main/java
 
 
 
