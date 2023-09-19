@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        var currentPage = 1; // 当前页
+        var itemsPerPage = 10; // 每页显示的数据项数量
+        var userData = []; // 全局变量，用于存储用户数据
+
+        $(document).ready(function(){
+            var type=window.localStorage.getItem("type");
+            if(type==1){
+                document.getElementById('addUserButton').style.display = 'block';
+            }else {
+                document.getElementById('addUserButton').style.display = 'none';
+            }
+            var authorizationToken = window.localStorage.getItem("Authorization");
+            axios({
+                method:'get',
+                url: 'http://localhost:8088/user/list',
+                data:{},
+                headers:{authorizationToken:authorizationToken}
+            }).then(function(response){
+                if (response.data.resultCode == 0){
+                    userData = response.data.data; // 保存用户数据到全局变量
+                    //填充表格
+                    loadPage(currentPage, response.data.data);
+                }else{
+                    $('#message').text(response.data.message);
+                    $('#errorDlg').modal();
+                }
+            }).catch(function(error){
+                console.log(error);
+            });
+        });
+
+        //刷新表格
+        function fetchUserData() {
+            var authorizationToken = window.localStorage.getItem("Authorization");
+            axios({
+                method: 'get',
+                url: 'http://localhost:8088/user/list',
+                data: {},
+                headers: { authorizationToken: authorizationToken }
+            }).then(function (response) {
+                if (response.data.resultCode == 0) {
+                    userData = response.data.data; // 更新全局用户数据
+                    loadPage(currentPage, userData); // 刷新表格
+                } else {
+                    $('#message').text(response.data.message);
+                    $('#errorDlg').modal();
+                }
+            }).catch(function (error) {
+                console.log(error);
+            });
+        }
+
+        function loadPage(page, data) {
+
+            // 根据当前页和每页显示的数量获取数据
+            var startIndex = (page - 1) * itemsPerPage;
+            var endIndex = startIndex + itemsPerPage;
+            var dataToShow = data.slice(startIndex, endIndex);
+
+            // 清空表格内容
+            $('tbody').empty();
+
+            // 填充表格
+            $.each(dataToShow, function(index, row) {
+                var html = "<tr>";
+                html += '<th score="row">' + row.id + '</th>';
+                html += '<td>' + row.account + '</td>';
+                html += '<td>' + row.password + '</td>';
+                html += '<td>' + row.email + '</td>';
+                html += '<td>';
+                html += '<button class="btn btn-info" onclick="viewDetails(' + row.id + ')">View</button>';
+                html += '<button class="btn btn-warning" onclick="editItem(' + row.id + ')">Edit</button>';
+                html += '<button class="btn btn-danger" onclick="deleteItem(' + row.id + ')">Delete</button>';
+                html += '</td>';
+                html += '</tr>';
+                $('tbody').append(html);
+            });
+
+
+            // 更新分页控件
+            updatePagination(data.length);
+        }
+
+        function updatePagination(totalItems) {
+
+            var totalPages = Math.ceil(totalItems / itemsPerPage);
+            var paginationHTML = '';
+
+            for (var i = 1; i <= totalPages; i++) {
+                var activeClass = i === currentPage ? 'active' : '';
+                paginationHTML += '<li class="' + activeClass + '" data-page="' + i + '"><a href="#" onclick="goToPage(' + i + ')">' + i + '</a></li>';
+            }
+
+            $('#pagination').html(paginationHTML);
+        }
+        // 添加一个新函数，用于处理分页点击事件
+        // 添加一个新函数，用于处理分页点击事件
+        function goToPage(page) {
+            var authorizationToken = window.localStorage.getItem("Authorization");
+            axios({
+                method: 'get',
+                url: 'http://localhost:8088/user/list',
+                data: {},
+                headers: { authorizationToken: authorizationToken }
+            }).then(function (response) {
+                currentPage = page; // 更新当前页
+                loadPage(currentPage, response.data.data); // 传递数据参数
+            }).catch(function (error) {
+                console.log(error);
+            });
+        }
+
+        //查看
+        function viewDetails(id) {
+            var row = userData.find(function(item) {
+                return item.id === id;
+            });
+            $('#id').val(row.id);
+            $('#account').val(row.account);
+            $('#password').val(row.password);
+            $('#email').val(row.email);
+            $('#viewModal').modal('show');
+        }
+        //打开添加
+        function addUser() {
+            $('#addModal').modal('show');
+        }
+        function addChanges() {
+            var account = $('#addAccount').val();
+            var password = $('#addPassword').val();
+            var email = $('#addEmail').val();
+
+            var data = {
+                "account": account,
+                "password": password,
+                "email": email
+            };
+
+            var authorizationToken = window.localStorage.getItem("Authorization");
+
+            axios({
+                method: 'put',
+                url: 'http://localhost:8088/user/add', // 根据你的实际情况修改URL
+                data: data,
+                headers: {
+                    "Authorization": authorizationToken,
+                    "Content-Type": "application/json" // 添加 Content-Type 头部
+                }
+            }).then(function (response) {
+                if (response.data.resultCode == 0) {
+                    $('#successAlert').show();
+                    setTimeout(function () {
+                        $('#successAlert').hide();
+                    }, 1000);
+                    $('#addModal').modal('hide');
+                    fetchUserData();
+                } else {
+                    alert("Account duplication")
+
+                }
+            });
+        }
+
+        //编辑
+        function editItem(id) {
+            var row = userData.find(function(item) {
+                return item.id === id;
+            });
+            $('#editId').val(row.id);
+            $('#editAccount').val(row.account);
+            $('#editPassword').val(row.password);
+            $('#editEmail').val(row.email);
+
+            $('#editModal').modal('show');
+        }
+        function saveChanges() {
+            // 获取编辑后的数据
+            var id = $('#editId').val();
+            var account = $('#editAccount').val();
+            var password = $('#editPassword').val();
+            var email = $('#editEmail').val();
+
+            var data = {
+                "id": id,
+                "account": account,
+                "password": password,
+                "email": email
+            };
+
+            axios({
+                method:'put',
+                url: 'http://localhost:8088/user/update',
+                data: data,
+            }).then(function(response){
+                if (response.data.resultCode == 0){
+                    // 3秒后隐藏提示
+                    $('#successAlert').show();
+                    setTimeout(function() {
+                        $('#successAlert').hide();
+                    }, 1000);
+                    $('#editModal').modal('hide');
+                    fetchUserData();
+                }else{
+                    $('#message').text(response.data.message);
+                    $('#errorDlg').modal();
+                }
+            });
+        }
+
+        function deleteItem(id) {
+            var authorizationToken = window.localStorage.getItem("Authorization");
+            axios({
+                method: 'delete',
+                url: 'http://localhost:8088/user/deleteById/' + id,
+                headers: { authorizationToken: authorizationToken }
+            }).then(function (response) {
+                if (response.data.resultCode == 0) {
+                    // 删除成功后的处理
+                    $('#successAlert').show();
+                    setTimeout(function () {
+                        $('#successAlert').hide();
+                    }, 1000);
+                    fetchUserData(); // 刷新用户数据
+                } else {
+                    $('#message').text(response.data.message);
+                    $('#errorDlg').modal();
+                }
+            }).catch(function (error) {
+                console.log(error);
+            });
+        }
+
+        function logout(){
+            window.location.href="http://localhost:8088/login.html";
+        }
+    </script>
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+
+        <div>
+            <ul class="nav navbar-nav">
+                <li><a href="#" onclick="logout()" style="margin-left: 1500px;">logout</a></li>
+
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<button class="btn btn-info" id="addUserButton" onclick="addUser()" style="margin-left: 50px">Add User</button>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">id</th>
+        <th scope="col">Account</th>
+        <th scope="col">Password</th>
+        <th scope="col">Email</th>
+        <th scope="col">Acition</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<div id="successAlert" class="alert alert-success fade in" style="display:none;">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+    operate successfully!
+</div>
+
+<!-- 模态框查看 -->
+<div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="viewModalLabel">View Details</h4>
+            </div>
+            <div class="modal-body">
+                <!-- 表单 -->
+                <form>
+                    <div class="form-group">
+                        <label for="id">ID</label>
+                        <input type="text" class="form-control" id="id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="account">Account</label>
+                        <input type="text" class="form-control" id="account" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="Password">Password</label>
+                        <input type="text" class="form-control" id="password" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="text" class="form-control" id="email" readonly>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--添加-->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="addModalLabel">Add User</h4>
+            </div>
+            <div class="modal-body">
+                <!-- 编辑表单 -->
+                <form>
+                    <div class="form-group">
+                        <label for="addAccount">Account</label>
+                        <input type="text" class="form-control" id="addAccount">
+                    </div>
+                    <div class="form-group">
+                        <label for="addPassword">Password</label>
+                        <input type="text" class="form-control" id="addPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="addEmail">Email</label>
+                        <input type="text" class="form-control" id="addEmail">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="addChanges()">Save Changes</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 编辑模态框 -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="editModalLabel">Edit Details</h4>
+            </div>
+            <div class="modal-body">
+                <!-- 编辑表单 -->
+                <form>
+                    <div class="form-group">
+                        <label for="editId">ID</label>
+                        <input type="text" class="form-control" id="editId" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAccount">Account</label>
+                        <input type="text" class="form-control" id="editAccount">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPassword">Password</label>
+                        <input type="text" class="form-control" id="editPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail">Email</label>
+                        <input type="text" class="form-control" id="editEmail">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--提示--->
+<div class="modal fade" tabindex="-1" role="dialog" id="errorDlg">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">提示</h4>
+            </div>
+            <div class="modal-body">
+                <p id="message"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<!-- 分页控件 -->
+<div class="text-center">
+    <ul class="pagination" id="pagination"></ul>
+</div>
+</body>
+</html>
