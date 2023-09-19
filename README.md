@@ -15,5 +15,8 @@ The backend application leverages Spring Boot, Spring Data JPA, and MySQL databa
 3. Controllers to handle HTTP requests
 ## Frontend-Backend Integration
 To facilitate seamless communication between the frontend and backend, we use the following code configuration (located in the Spring MVC module of the Java Spring framework):
+![Image text](https://github.com/wmy0121/POC/blob/master/img/%E5%9B%BE%E5%83%8F9-19-23%20%E4%B8%8B%E5%8D%885.52.jpeg)
+
+
 
 
