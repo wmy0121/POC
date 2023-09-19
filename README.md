@@ -32,5 +32,7 @@ The front-end application communicates with the back-end API to create, read, up
 ### Login Interface
 ![Image text](https://github.com/wmy0121/POC/blob/master/img/%E5%9B%BE%E5%83%8F9-19-23%20%E4%B8%8B%E5%8D%886.29.jpeg)
 ### Administrator Application Interface
+![Image text](https://github.com/wmy0121/POC/blob/master/img/%E5%9B%BE%E5%83%8F9-19-23%20%E4%B8%8B%E5%8D%886.30.jpeg)
+### Common User Application Interface
 ![Image text]()
 
